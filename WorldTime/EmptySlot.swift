@@ -65,11 +65,7 @@ struct EmptySlot: View {
             listState = .searching(query: "")
             isFocused = true
         }
-        .onChange(of: searchQuery) { oldValue, newValue in
-            if !newValue.isEmpty {
-                listState = .searching(query: newValue)
-            }
-        }
+        
     }
 }
 

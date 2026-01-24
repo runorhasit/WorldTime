@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 import Combine
+import MapKit
 
 final class LocationManager: NSObject, ObservableObject {
     
@@ -15,7 +16,8 @@ final class LocationManager: NSObject, ObservableObject {
     @Published var permissionDenied: Bool = false
     
     private let locationManager = CLLocationManager()
-    private let geocoder = CLGeocoder()
+    private let cityDatabase = CityDatabase()
+    
     
     override init() {
         super.init()
@@ -46,13 +48,15 @@ extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
         
+        let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-            guard let placemark = placemarks?.first,
-                  let cityName = placemark.locality,
-                  let timeZone = placemark.timeZone else { return }
+            guard let placemark = placemarks?.first else { return }
+            
+            let cityName = placemark.locality ?? placemark.subAdministrativeArea ?? "Unknown"
+            let timeZoneId = placemark.timeZone?.identifier ?? TimeZone.current.identifier
             
             DispatchQueue.main.async {
-                self?.userCity = CityTime(city: cityName, timeZone: timeZone)
+                self?.userCity = CityTime(city: cityName, timeZoneIdentifier: timeZoneId)
             }
         }
     }

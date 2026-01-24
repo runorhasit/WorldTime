@@ -7,10 +7,23 @@
 
 import SwiftUI
 
-struct CityTime: Identifiable, Equatable {
-    let id = UUID()
+
+struct CityTime: Identifiable, Equatable, Codable, Hashable {
+    let id: UUID
     let city: String
-    let timeZone: TimeZone
+    let timeZoneIdentifier: String
+    
+    init(id: UUID = UUID(), city: String, timeZoneIdentifier: String) {
+        self.id = id
+        self.city = city
+        self.timeZoneIdentifier = timeZoneIdentifier
+    }
+    
+    var timeZone: TimeZone {
+       return TimeZone(identifier: timeZoneIdentifier) ?? .current
+    }
+    
+    
 }
 
 
@@ -30,6 +43,9 @@ struct ContentView: View {
     @StateObject private var timeVM = TimeViewModel()
     @StateObject private var locationManager = LocationManager()
     
+    @State private var searchResults: [CityTime] = []
+    
+    
     
     private var isSearching: Bool {
         if case .searching = listState { return true }
@@ -37,31 +53,24 @@ struct ContentView: View {
     }
     
     
-    private var searchResults: [CityTime] {
-        guard case .searching(let query) = listState,
-              !query.isEmpty
-        else { return [] }
-
-        let allCities = [
-            CityTime(city: "London", timeZone: .init(identifier: "Europe/London") ?? .current),
-            CityTime(city: "Toronto", timeZone: .init(identifier: "America/Toronto") ?? .current),
-            CityTime(city: "Fort St. John", timeZone: .init(identifier: "America/Dawson_Creek") ?? .current),
-            CityTime(city: "Amsterdam", timeZone: .init(identifier: "Europe/Amsterdam") ?? .current),
-            CityTime(city: "Abu Dhabi", timeZone: .init(identifier: "Asia/Dubai") ?? .current)
-        ]
+    private func searchCities(query: String) {
+        guard !query.isEmpty else {
+            searchResults = []
+            return
+        }
         
         let addedCityNames = cities.map { $0.city.lowercased() }
         
-        return allCities.filter {
-            $0.city.lowercased().contains(query.lowercased()) &&
+        searchResults = Array(CityDatabase.cities.filter {
+            $0.city.lowercased().hasPrefix(query.lowercased()) &&
             !addedCityNames.contains($0.city.lowercased())
-        }
+        }.prefix(1))
     }
     
     
     private var searchResultsHeight: CGFloat {
         let rowHeight: CGFloat = 45
-        let maxHeight: CGFloat = 220
+        let maxHeight: CGFloat = 45
         let contentHeight = CGFloat(searchResults.count) * rowHeight
         return min(contentHeight, maxHeight)
     }
@@ -112,6 +121,15 @@ struct ContentView: View {
                                 .foregroundColor(Color(red: 182/255, green: 255/255, blue: 163/255).opacity(0.48))
                             
                         }
+                        .contextMenu {
+                                Button(role: .destructive) {
+                                    if let index = cities.firstIndex(where: { $0.id == city.id }) {
+                                        cities.remove(at: index)
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                     }
                     
                     // Case 2: cities exist but < 5 → EmptySlot is appended
@@ -124,33 +142,34 @@ struct ContentView: View {
                     
                     
                     // Search results-expand below the active slot
-                    if case .searching = listState, (cities.isEmpty || showAddSlot) {
+                    if case .searching = listState,
+                       (cities.isEmpty || showAddSlot),
+                       !searchResults.isEmpty {
+
                         VStack(spacing: 0) {
-                            // Divider between EmptySlot and results
                             Rectangle()
                                 .fill(Color(red: 182/255, green: 255/255, blue: 163/255).opacity(0.48))
                                 .frame(width: 361, height: 1)
-                            
-                            ScrollView {
+
+                            ScrollView(.vertical, showsIndicators: false) {
                                 VStack(spacing: 0) {
-                                    ForEach(searchResults) { result in
+                                    ForEach(searchResults.prefix(1)) { result in
                                         Button {
                                             cities.append(result)
                                             listState = .populated
                                             searchQuery = ""
-                                            showAddSlot = false  // Hide EmptySlot after selection
+                                            showAddSlot = false
                                         } label: {
                                             VStack(spacing: 0) {
                                                 HStack {
                                                     Text(result.city)
                                                         .font(.body)
                                                         .foregroundColor(.yellow)
-                                                    
                                                     Spacer()
                                                 }
                                                 .padding(.leading, 16)
                                                 .frame(width: 361, height: 44)
-                                                
+
                                                 Rectangle()
                                                     .fill(Color(red: 182/255, green: 255/255, blue: 163/255).opacity(0.48))
                                                     .frame(width: 361, height: 1)
@@ -166,7 +185,8 @@ struct ContentView: View {
                     
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, 40)
+                .padding(.top, 20)
+                
                 
                 Spacer()
                 
@@ -215,16 +235,39 @@ struct ContentView: View {
         
         }
         .onAppear {
+            
+            // Load saved cities
+            if let data = UserDefaults.standard.data(forKey: "savedCities") {
+                let decoder = JSONDecoder()
+                if let savedCities = try? decoder.decode([CityTime].self, from: data) {
+                        cities = savedCities
+                    }
+                }
+            
+            // Only request location if no cities exist
             if cities.isEmpty {
                 locationManager.requestPermission()
             }
         }
         
        .onChange(of: locationManager.userCity) { oldValue, newValue in
+           // adds city when location detected
             if let city = newValue, cities.isEmpty {
                 cities.append(city)
            }
         }
+        
+       .onChange(of: searchQuery) { oldValue, newValue in
+           print("searchQuery changed to: \(newValue)")
+           searchCities(query: newValue)
+       }
+        
+       .onChange(of: cities) { oldValue, newValue in
+           // saves cities whenever array changes
+           let encoder = JSONEncoder()
+           let data = try? encoder.encode(newValue)
+           UserDefaults.standard.set(data, forKey: "savedCities")
+       }
         
         
     }
@@ -306,6 +349,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
-
-
 
