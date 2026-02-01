@@ -149,7 +149,8 @@ struct ContentView: View {
                         VStack(spacing: 0) {
                             Rectangle()
                                 .fill(Color(red: 182/255, green: 255/255, blue: 163/255).opacity(0.48))
-                                .frame(width: 361, height: 1)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 1)
 
                             ScrollView(.vertical, showsIndicators: false) {
                                 VStack(spacing: 0) {
@@ -168,11 +169,13 @@ struct ContentView: View {
                                                     Spacer()
                                                 }
                                                 .padding(.leading, 16)
-                                                .frame(width: 361, height: 44)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 44)
 
                                                 Rectangle()
                                                     .fill(Color(red: 182/255, green: 255/255, blue: 163/255).opacity(0.48))
-                                                    .frame(width: 361, height: 1)
+                                                    .frame(maxWidth: .infinity)
+                                                    .frame(height: 1)
                                             }
                                         }
                                     }
@@ -292,11 +295,11 @@ struct ContentView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(note)
                             .textInputAutocapitalization(.words)
-                            .font(.caption)
+                            .font(.system(.footnote, weight: .semibold))
                             .foregroundColor(Color(red: 182/255, green: 255/255, blue: 163/255))
 
                         Text(city)
-                            .font(.system(size: 17, weight: .medium))
+                            .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(.yellow)
                     }
 
@@ -309,7 +312,8 @@ struct ContentView: View {
 
             
             }
-            .frame(width: 361, height: 66)
+            .frame(maxWidth: .infinity)
+            .frame(height: 66)
         }
     }
 

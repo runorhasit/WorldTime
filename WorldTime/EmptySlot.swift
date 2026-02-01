@@ -58,7 +58,8 @@ struct EmptySlot: View {
             }
         }
         .padding(.leading, 16)
-        .frame(width: 361, height: 66)
+        .frame(maxWidth: .infinity)
+        .frame(height: 66)
         .background(Color(red: 40/255, green: 112/255, blue: 21/255))
         .contentShape(Rectangle())
         .onTapGesture {
