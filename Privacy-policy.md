@@ -1,6 +1,6 @@
 # Privacy Policy for WorldTime
 
-**Last updated:** January 24, 2026
+**Last updated:** April 3, 2026
 
 ## Overview
 
