@@ -50,11 +50,6 @@ WorldTime follows the MVVM pattern:
 
 ## Future Improvements
 
-### High Priority
-- Persist cities between launches (UserDefaults or Core Data)
-- Replace deprecated CLGeocoder with MapKit geocoding APIs
-- Integrate real city search (MKLocalSearch or timezone API)
-
 ### Medium Priority
 - Swipe to delete cities
 - Drag to reorder cities
