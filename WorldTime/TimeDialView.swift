@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import UIKit
+
 
 struct TimeDialView: View {
     
@@ -13,12 +15,15 @@ struct TimeDialView: View {
     
     @State private var lastDragAngle: Double?
     @State private var accumulatedRotation: Double = 0
+    @State private var pendingRotation: Double = 0
+    @State private var selectionFeedback = UISelectionFeedbackGenerator()
     
     
     private enum Dial {
         static let outerSize: CGFloat = 217
         static let innerSize: CGFloat = 163
         static let pointerInset: CGFloat = 20
+        static let incrementDegrees: Double = 1.25   // 5 minutes: 360deg / 1440min = 0.25deg/min
     }
     
     
@@ -122,6 +127,12 @@ struct TimeDialView: View {
         }
         .frame(width: Dial.outerSize, height: Dial.outerSize)
         .gesture(dragGesture)
+        .onAppear {
+            syncPointerToCurrentTime()
+        }
+        .onChange(of: timeVM.scrubbedDate) { _, _ in
+            syncPointerToCurrentTime()
+        }
     }
     
     
@@ -132,19 +143,32 @@ struct TimeDialView: View {
 
                 if let last = lastDragAngle {
                     var delta = angle - last
-
+                    
                     // Handle crossing 0/360 cleanly
                     if delta > 180 { delta -= 360 }
                     if delta < -180 { delta += 360 }
-
-                    accumulatedRotation += delta
-                    timeVM.scrub(byDegrees: delta)
+                    
+                pendingRotation += delta
+                    
+                    while abs(pendingRotation) >= Dial.incrementDegrees {
+                        let step = Dial.incrementDegrees * (pendingRotation > 0 ? 1 : -1)
+                        accumulatedRotation += step
+                        timeVM.scrub(byDegrees: step)
+                        pendingRotation -= step
+                        selectionFeedback.selectionChanged()
+                    }
+                    
+                } else {
+                    timeVM.beginScrubbing()
+                    pendingRotation = 0
+                    selectionFeedback.prepare()
                 }
 
                 lastDragAngle = angle
             }
             .onEnded { _ in
                 lastDragAngle = nil
+                timeVM.endScrubbing()
             }
     }
     
@@ -154,6 +178,28 @@ struct TimeDialView: View {
         let dy = center - location.y
         return atan2(dx, dy) * 180 / .pi
     }
+    
+    private func rotationForCurrentTime() -> Double {
+        let startOfDay = Calendar.current.startOfDay(for: timeVM.scrubbedDate)
+        let minutesSinceMidnight = timeVM.scrubbedDate.timeIntervalSince (startOfDay) / 60
+        return (minutesSinceMidnight / 1440) * 360
+        
+    }
+    
+    private func shortestPath(from current: Double, to  target: Double) -> Double {
+        let delta = (target - current).truncatingRemainder(dividingBy: 360)
+        let shortestDelta = delta > 180 ? delta - 360 : (delta < -180 ? delta + 360 : delta)
+        return current + shortestDelta
+        
+    }
+    
+    private func syncPointerToCurrentTime() {
+        guard !timeVM.isScrubbing else { return }
+        let target = rotationForCurrentTime()
+        accumulatedRotation = shortestPath(from: accumulatedRotation, to: target)
+    }
+    
+    
     
 }
 

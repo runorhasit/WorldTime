@@ -15,7 +15,8 @@ final class TimeViewModel: ObservableObject {
     /// The time the user is scrubbing to (this drives the UI)
     @Published var scrubbedDate: Date = Date()
     
-    
+    /// True while a drag gesture is actively controlling the dial
+    @Published private(set) var isScrubbing: Bool = false
     
     
     private var timer: AnyCancellable?
@@ -28,7 +29,13 @@ final class TimeViewModel: ObservableObject {
                 .publish(every: 1, on: .main, in: .common)
                 .autoconnect()
                 .sink { [weak self] _ in
-                    self?.now = Date()
+                    guard let self else {return}
+                        self.now = Date()
+                    
+                // keep scrubbedDate live while nobody is actively dragging
+                    if !self.isScrubbing {
+                        self.scrubbedDate = self.now
+                    }
                 }
         }
     
@@ -94,6 +101,16 @@ final class TimeViewModel: ObservableObject {
         
     }
     
+    
+    func beginScrubbing() {
+        isScrubbing = true
+    }
+    
+    func endScrubbing() {
+        isScrubbing = false
+        // sync immediately so there is no gap before the next timer tick
+        scrubbedDate = now
+    }
     
     func scrub(to degrees: Double) {
         let minutes = Int((degrees/360) * 1440)
