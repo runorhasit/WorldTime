@@ -70,11 +70,17 @@ final class TimeViewModel: ObservableObject {
         var remoteCalendar = Calendar.current
         remoteCalendar.timeZone = timeZone
         
-        //compare days using scrubbed date
-        let localDay = localCalendar.component(.day, from: scrubbedDate)
-        let remoteDay = remoteCalendar.component(.day, from: scrubbedDate)
+        //compare full calendar dates, not just the day-of-month number
+        let localComponents = localCalendar.dateComponents([.year, .month, .day], from: scrubbedDate)
+        let remoteComponents = remoteCalendar.dateComponents([.year, .month, .day], from: scrubbedDate)
         
-        let offset = remoteDay - localDay
+        let offset: Int
+        if let localDate = localCalendar.date(from: localComponents),
+           let remoteDate = localCalendar.date(from: remoteComponents) {
+            offset = localCalendar.dateComponents([.day], from: localDate, to: remoteDate).day ?? 0
+        } else {
+            offset = 0
+        }
         
         let dayText: String
         switch offset {
