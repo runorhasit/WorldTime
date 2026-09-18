@@ -301,6 +301,7 @@ struct ContentView: View {
                         Text(city)
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(.yellow)
+                            .lineLimit(1)
                     }
 
                     Spacer() // auto gap
@@ -308,6 +309,7 @@ struct ContentView: View {
                     Text(time)
                         .font(.system(size: 60, weight: .semibold))
                         .foregroundColor(Color(red: 182/255, green: 255/255, blue: 163/255))
+                        .layoutPriority(1)
                 }
 
             
