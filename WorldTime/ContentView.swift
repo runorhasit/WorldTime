@@ -284,6 +284,32 @@ struct ContentView: View {
         let city: String
         let time: String
         let note: String
+        
+        
+        @ViewBuilder
+        private var timeText: some View {
+            let mainFont = Font.system(size: 60, weight: .semibold)
+            let periodFont = Font.system(size: 24, weight: .semibold)
+            let color = Color(red: 182/255, green: 255/255, blue: 163/255)
+
+            if let spaceIndex = time.lastIndex(where: { $0.isWhitespace }) {
+                let digits = String(time[..<spaceIndex])
+                let period = String(time[time.index(after: spaceIndex)...])
+
+                HStack(alignment: .lastTextBaseline, spacing: 0) {
+                    Text(digits)
+                        .font(mainFont)
+                        .foregroundColor(color)
+                    Text(period)
+                        .font(periodFont)
+                        .foregroundColor(color)
+                }
+            } else {
+                Text(time)
+                    .font(mainFont)
+                    .foregroundColor(color)
+            }
+        }
 
         var body: some View {
             VStack(spacing: 6) {
@@ -305,11 +331,9 @@ struct ContentView: View {
                     }
 
                     Spacer() // auto gap
-
-                    Text(time)
-                        .font(.system(size: 60, weight: .semibold))
-                        .foregroundColor(Color(red: 182/255, green: 255/255, blue: 163/255))
-                        .layoutPriority(1)
+                    
+                    timeText
+                    .layoutPriority(1)
                 }
 
             
