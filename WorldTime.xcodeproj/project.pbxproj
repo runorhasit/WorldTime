@@ -413,6 +413,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WorldTime/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = WorldTime;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WorldTime needs your location to show your local time";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -452,6 +453,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WorldTime/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = WorldTime;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WorldTime needs your location to show your local time";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
